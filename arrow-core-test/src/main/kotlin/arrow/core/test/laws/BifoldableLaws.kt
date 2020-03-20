@@ -4,6 +4,7 @@ import arrow.Kind2
 import arrow.core.Eval
 import arrow.core.extensions.eq
 import arrow.core.extensions.monoid
+import arrow.core.identity
 import arrow.core.test.generators.GenK2
 import arrow.core.test.generators.functionAToB
 import arrow.core.test.generators.intSmall
@@ -21,7 +22,8 @@ object BifoldableLaws {
 
     return listOf(
       Law("Bifoldable Laws: Left bifold consistent with BifoldMap") { BF.bifoldLeftConsistentWithBifoldMap(GEN, EQ) },
-      Law("Bifoldable Laws: Right bifold consistent with BifoldMap") { BF.bifoldRightConsistentWithBifoldMap(GEN, EQ) }
+      Law("Bifoldable Laws: Right bifold consistent with BifoldMap") { BF.bifoldRightConsistentWithBifoldMap(GEN, EQ) },
+      Law("Bifoldable Laws: collapse consistent with BifoldMap") { BF.collapseConsistentWithBifoldMap(GEN, EQ) }
     )
   }
 
@@ -42,6 +44,13 @@ object BifoldableLaws {
         val expected = fab.bifoldRight(Eval.Later { Int.monoid().empty() }, { a: Int, ec: Eval<Int> -> ec.map { c -> f(a).combine(c) } },
           { b: Int, ec: Eval<Int> -> ec.map { c -> g(b).combine(c) } })
         expected.value().equalUnderTheLaw(fab.bifoldMap(this, f, g), EQ)
+      }
+    }
+
+  fun <F> Bifoldable<F>.collapseConsistentWithBifoldMap(G: Gen<Kind2<F, Int, Int>>, EQ: Eq<Int>) =
+    forAll(G) { fab: Kind2<F, Int, Int> ->
+      with(Int.monoid()) {
+        fab.collapse(this).equalUnderTheLaw(fab.bifoldMap(this, ::identity, ::identity), EQ)
       }
     }
 }

@@ -5,6 +5,7 @@ import arrow.core.extensions.combine
 import arrow.core.extensions.either.applicative.applicative
 import arrow.core.extensions.either.applicativeError.handleErrorWith
 import arrow.core.extensions.either.bicrosswalk.bicrosswalk
+import arrow.core.extensions.either.bifoldable.collapse
 import arrow.core.extensions.either.bifunctor.bifunctor
 import arrow.core.extensions.either.bitraverse.bitraverse
 import arrow.core.extensions.either.eq.eq
@@ -201,6 +202,17 @@ class EitherTest : UnitSpec() {
       forAll { a: Int, b: Int ->
         Left(a).handleErrorWith { Right(b) } == Right(b) &&
           Right(a).handleErrorWith { Right(b) } == Right(a)
+      }
+    }
+
+    "collapse should be consistent with Bifoldable.collapse" {
+      forAll { a: Int ->
+        listOf(
+          Left(a).collapse(),
+          Right(a).collapse(),
+          Left(a).collapse(Int.monoid()),
+          Right(a).collapse(Int.monoid())
+        ).all { it == a }
       }
     }
   }

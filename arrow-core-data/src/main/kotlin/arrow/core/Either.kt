@@ -1038,6 +1038,31 @@ fun <A> A.left(): Either<A, Nothing> = Either.Left(this)
 fun <A> A.right(): Either<Nothing, A> = Either.Right(this)
 
 /**
+ * You might have a case where both sides of an Either are of the same type after mapping one side.
+ * One such case might be defaulting in case of error.
+ * Collapse offers precisely that: Getting whichever of the values contained in the Either for consumption.
+ *
+ * Example:
+ *
+ * ```kotlin:ank:playground
+ * import arrow.core.extensions.either.bifoldable.*
+ *
+ * data class Fail(val message: String)
+ * //sampleStart
+ * fun somethingThatMighFail(): Either<Fail, String> = Fail("Something broke").left()
+ * val attempt: Either<Fail, String> = somethingThatMighFail()
+ * val defaulted: Either<String, String> = attempt.mapLeft { "Failed with message: ${it.message}" }
+ * val collapsedValue: String = defaulted.collapse()
+ * //sampleEnd
+ * fun main() {
+ *   println("The collapsed value is: $collapsedValue")
+ * }
+ * ```
+ */
+fun <A> Either<A, A>.collapse(): A =
+  this.fold(::identity, ::identity)
+
+/**
  * Returns [Either.Right] if the value of type B is not null, otherwise the specified A value wrapped into an
  * [Either.Left].
  *
